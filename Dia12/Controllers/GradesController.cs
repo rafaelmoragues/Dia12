@@ -22,6 +22,7 @@ namespace Dia12.Controllers
         // GET: Grades
         public async Task<IActionResult> Index()
         {
+
               return View();
         }
 
