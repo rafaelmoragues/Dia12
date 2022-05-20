@@ -7,35 +7,36 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Dia12.Data;
 using Dia12.Models;
+using Dia12.UnitsOfWork;
 
 namespace Dia12.Controllers
 {
     public class GradesController : Controller
     {
-        private readonly ApplicationDbContext _context;
 
+        private UnitOfWork unitOfWork;
         public GradesController(ApplicationDbContext context)
         {
-            _context = context;
+            unitOfWork =new UnitOfWork(context);
         }
+        
 
         // GET: Grades
         public async Task<IActionResult> Index()
         {
-
-              return View();
+            var grade = await unitOfWork.GradeRepo.GetAll();
+              return View(grade);
         }
 
         // GET: Grades/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Grades == null)
+            if (id == null || unitOfWork.GradeRepo == null)
             {
                 return NotFound();
             }
 
-            var grade = await _context.Grades
-                .FirstOrDefaultAsync(m => m.GradeId == id);
+            var grade = await unitOfWork.GradeRepo.GetById(id);
             if (grade == null)
             {
                 return NotFound();
@@ -59,8 +60,8 @@ namespace Dia12.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(grade);
-                await _context.SaveChangesAsync();
+                await unitOfWork.GradeRepo.Insert(grade);
+                 unitOfWork.SaveChanges();
                 return RedirectToAction(nameof(Index));
             }
             return View(grade);
@@ -69,12 +70,12 @@ namespace Dia12.Controllers
         // GET: Grades/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Grades == null)
+            if (id == null || unitOfWork.GradeRepo == null)
             {
                 return NotFound();
             }
 
-            var grade = await _context.Grades.FindAsync(id);
+            var grade = await unitOfWork.GradeRepo.GetById(id);
             if (grade == null)
             {
                 return NotFound();
@@ -98,8 +99,8 @@ namespace Dia12.Controllers
             {
                 try
                 {
-                    _context.Update(grade);
-                    await _context.SaveChangesAsync();
+                    await unitOfWork.GradeRepo.Insert(grade);
+                    unitOfWork.SaveChanges();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -120,13 +121,12 @@ namespace Dia12.Controllers
         // GET: Grades/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Grades == null)
+            if (id == null || unitOfWork.GradeRepo == null)
             {
                 return NotFound();
             }
 
-            var grade = await _context.Grades
-                .FirstOrDefaultAsync(m => m.GradeId == id);
+            var grade = await unitOfWork.GradeRepo.GetById(id);
             if (grade == null)
             {
                 return NotFound();
@@ -140,23 +140,29 @@ namespace Dia12.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Grades == null)
+            if (unitOfWork.GradeRepo == null)
             {
                 return Problem("Entity set 'ApplicationDbContext.Grades'  is null.");
             }
-            var grade = await _context.Grades.FindAsync(id);
+            var grade = await unitOfWork.GradeRepo.GetById(id);
             if (grade != null)
             {
-                _context.Grades.Remove(grade);
+                await unitOfWork.GradeRepo.Delete(id);
             }
             
-            await _context.SaveChangesAsync();
+            unitOfWork.SaveChanges();
             return RedirectToAction(nameof(Index));
         }
 
         private bool GradeExists(int id)
         {
-          return (_context.Grades?.Any(e => e.GradeId == id)).GetValueOrDefault();
+            return true;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            unitOfWork.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

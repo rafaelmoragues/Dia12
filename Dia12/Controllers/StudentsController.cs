@@ -6,35 +6,36 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Dia12.Data;
+using Dia12.UnitsOfWork;
 using Dia12.Models;
 
 namespace Dia12.Controllers
 {
     public class StudentsController : Controller
     {
-        private readonly ApplicationDbContext _context;
 
+        UnitOfWork unitOfWork;
         public StudentsController(ApplicationDbContext context)
         {
-            _context = context;
+            unitOfWork = new UnitOfWork(context);
         }
 
         // GET: Students
         public async Task<IActionResult> Index()
         {
-              return View();
+            var student = await unitOfWork.StudentRepo.GetAll();
+              return View(student);
         }
 
         // GET: Students/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Students == null)
+            if (id == null || unitOfWork.StudentRepo == null)
             {
                 return NotFound();
             }
 
-            var student = await _context.Students
-                .FirstOrDefaultAsync(m => m.StudentId == id);
+            var student = await unitOfWork.StudentRepo.GetById(id);
             if (student == null)
             {
                 return NotFound();
@@ -58,8 +59,8 @@ namespace Dia12.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(student);
-                await _context.SaveChangesAsync();
+                await unitOfWork.StudentRepo.Insert(student);
+                unitOfWork.SaveChanges();
                 return RedirectToAction(nameof(Index));
             }
             return View(student);
@@ -68,12 +69,12 @@ namespace Dia12.Controllers
         // GET: Students/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Students == null)
+            if (id == null || unitOfWork.StudentRepo == null)
             {
                 return NotFound();
             }
 
-            var student = await _context.Students.FindAsync(id);
+            var student = await unitOfWork.StudentRepo.GetById(id);
             if (student == null)
             {
                 return NotFound();
@@ -97,8 +98,8 @@ namespace Dia12.Controllers
             {
                 try
                 {
-                    _context.Update(student);
-                    await _context.SaveChangesAsync();
+                    await unitOfWork.StudentRepo.Update(student);
+                    unitOfWork.SaveChanges();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -119,13 +120,12 @@ namespace Dia12.Controllers
         // GET: Students/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Students == null)
+            if (id == null || unitOfWork.StudentRepo == null)
             {
                 return NotFound();
             }
 
-            var student = await _context.Students
-                .FirstOrDefaultAsync(m => m.StudentId == id);
+            var student = await unitOfWork.StudentRepo.GetById(id);
             if (student == null)
             {
                 return NotFound();
@@ -139,23 +139,29 @@ namespace Dia12.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Students == null)
+            if (unitOfWork.StudentRepo == null)
             {
                 return Problem("Entity set 'ApplicationDbContext.Students'  is null.");
             }
-            var student = await _context.Students.FindAsync(id);
+            var student = await unitOfWork.StudentRepo.GetById(id);
             if (student != null)
             {
-                _context.Students.Remove(student);
+                await unitOfWork.StudentRepo.Delete(id);
             }
-            
-            await _context.SaveChangesAsync();
+
+            unitOfWork.SaveChanges();
             return RedirectToAction(nameof(Index));
         }
 
         private bool StudentExists(int id)
         {
-          return (_context.Students?.Any(e => e.StudentId == id)).GetValueOrDefault();
+            //return (_context.Students?.Any(e => e.StudentId == id)).GetValueOrDefault();
+            return true;
         }
+        //protected override void Dispose(bool disposing)
+        //{
+        //    unitOfWork.Dispose();
+        //    base.Dispose(disposing);
+        //}
     }
 }
