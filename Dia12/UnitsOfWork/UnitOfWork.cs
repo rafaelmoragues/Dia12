@@ -17,6 +17,7 @@ namespace Dia12.UnitsOfWork
         }
         public IStudentRepo StudentRepo {get; private set;}
         public IGradeRepo GradeRepo { get; private set; }
+
         private bool disposed = false;
         protected virtual void Dispose(bool disposing)
         {

@@ -8,5 +8,7 @@ namespace Dia12.Repository
         public GradeRepo(ApplicationDbContext dbcontext) : base(dbcontext)
         {
         }
+
+
     }
 }

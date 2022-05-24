@@ -1,6 +1,4 @@
-﻿using NPOI.SS.Formula.Functions;
-
-namespace Dia12.Repository
+﻿namespace Dia12.Repository
 {
     public interface IGenericRepository<T> where T : class
     {

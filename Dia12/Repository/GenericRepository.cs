@@ -1,9 +1,5 @@
 ﻿using Dia12.Data;
-using System.Linq;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using NPOI.SS.Formula.Functions;
 
 namespace Dia12.Repository
 {
@@ -43,7 +39,7 @@ namespace Dia12.Repository
 
         public async Task Update(T entity)
         {
-            await _dbContext.AddAsync(entity);            
+            _dbContext.Update(entity);
         }
     }
 }
